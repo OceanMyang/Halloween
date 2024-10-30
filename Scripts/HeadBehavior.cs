@@ -21,6 +21,7 @@ public class HeadBehavior : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        rb.useGravity = false;
         if (knee == null)
         {
             knee = GameObject.FindGameObjectWithTag("Knee").transform;
@@ -47,7 +48,7 @@ public class HeadBehavior : MonoBehaviour
         Vector3 hookeForce = springConstant * direction * (distance - maxDistance);
         if (Input.GetKey(KeyCode.Space))
         {
-            if (distance >= minDistance && distance <= maxDistance)
+            if (distance >= minDistance)
             {
                 knee.position += direction  * slideSpeed * Time.deltaTime;
             }
