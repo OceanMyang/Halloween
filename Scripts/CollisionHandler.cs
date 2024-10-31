@@ -1,10 +1,15 @@
 using UnityEngine;
 
-public class CollisionDetector : MonoBehaviour
+public class CollisionHandler : MonoBehaviour
 {
     public bool isColliding = false;
     public Vector3 normalVector = Vector3.zero;
 
+    Rigidbody rb;
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
     private void OnCollisionEnter(Collision collision)
     {
         isColliding = true;
@@ -20,6 +25,7 @@ public class CollisionDetector : MonoBehaviour
         else
         {
             normalVector = collision.contacts[0].normal;
+            rb.AddForce(-2 * normalVector, ForceMode.VelocityChange);
         }
     }
 
