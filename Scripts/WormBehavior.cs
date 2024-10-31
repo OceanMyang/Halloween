@@ -1,5 +1,6 @@
 ﻿using Unity.VisualScripting;
 using UnityEngine;
+using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 public class WormBehavior : MonoBehaviour
 {
@@ -12,8 +13,10 @@ public class WormBehavior : MonoBehaviour
     public float maxDistance = 4f;
     public float minDistance = 2f;
 
-    private CollisionHandler headCd;
-    private CollisionHandler kneeCd;
+    public Rigidbody mover;
+    public Rigidbody root;
+    private CollisionHandler moverCd;
+    private CollisionHandler rootCd;
     private Vector3 offset;
     private Vector3 direction;
     private float distance;
@@ -28,12 +31,10 @@ public class WormBehavior : MonoBehaviour
         if (head == null)
         {
             head = GameObject.FindGameObjectWithTag("Head").GetComponent<Rigidbody>();
-            headCd = head.gameObject.GetComponent<CollisionHandler>();
         }
         if (knee == null)
         {
             knee = GameObject.FindGameObjectWithTag("Knee").GetComponent<Rigidbody>();
-            kneeCd = knee.gameObject.GetComponent<CollisionHandler>();
         }
         if (minDistance >= maxDistance)
         {
@@ -44,7 +45,21 @@ public class WormBehavior : MonoBehaviour
 
     void FixedUpdate()
     {
-        offset = head.position - knee.position;
+        if (Input.GetMouseButton(0))
+        {
+            mover = knee;
+            root = head;
+        }
+        else
+        {
+            mover = head;
+            root = knee;
+        }
+
+        moverCd = mover.gameObject.GetComponent<CollisionHandler>();
+        rootCd = root.gameObject.GetComponent<CollisionHandler>();
+
+        offset = mover.position - root.position;
         direction = offset.normalized;
         distance = offset.magnitude;
         hookeForce = springConstant * (distance - maxDistance);
@@ -52,6 +67,8 @@ public class WormBehavior : MonoBehaviour
         SlideHead();
         ClampPosition();
         LiftHead();
+
+        Debug.Log("Direction: " + direction);
     }
 
     void SlideHead()
@@ -62,17 +79,17 @@ public class WormBehavior : MonoBehaviour
             potentialEnergy = 0.5f * springConstant * (distance - maxDistance) * (distance - maxDistance);
             if (distance > minDistance)
             {
-                head.AddForce(-direction * slideSpeed, ForceMode.Impulse);
+                mover.AddForce(-direction * slideSpeed, ForceMode.Impulse);
             }
         }
         else
         {
-             isPressed = false;
+            isPressed = false;
         }
 
         if (distance != maxDistance)
         {
-            head.AddForce(-direction * hookeForce, ForceMode.Impulse);
+            mover.AddForce(-direction * hookeForce, ForceMode.Impulse);
         }
     }
 
@@ -82,67 +99,52 @@ public class WormBehavior : MonoBehaviour
         float v = Input.GetAxis("Vertical");
         float h = Input.GetAxis("Horizontal");
 
-        head.rotation = Quaternion.LookRotation(direction);
-        if (v != 0)
+        mover.rotation = Quaternion.LookRotation(direction);
+        //if (v != 0)
+        //{
+        //    mover.useGravity = false;
+        //    if (!(v > 0 && XZ(offset).magnitude <= 1))
+        //    {
+        //        head.position += v * liftSpeed * Time.deltaTime * head.transform.up;
+        //    }
+        //    head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
+        //    head.AddForce(-Physics.gravity, ForceMode.Acceleration);
+        //}
+        //else if (h != 0)
+        //{
+        //    mover.useGravity = false;
+        //    head.position += h * liftSpeed * Time.deltaTime * head.transform.right;
+        //    head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
+        //    head.AddForce(-Physics.gravity, ForceMode.Acceleration);
+        //}
+
+        float theta = 0f;
+        float phi = 0f;
+        if (v != 0 || h != 0)
         {
-            head.useGravity = false;
-            //if (!(v > 0 && XZ(offset).magnitude <= 1))
-            //{
-            //    head.position += v * liftSpeed * Time.deltaTime * head.transform.up;
-            //}
-            head.position = knee.position + SphericalCoordinates(v * angularSpeed * Time.deltaTime, true);
-            //head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
-            //head.AddForce(-Physics.gravity, ForceMode.Acceleration);
-        }
-        else if (h != 0)
-        {
-            head.useGravity = false;
-            //head.position += h * liftSpeed * Time.deltaTime * head.transform.right;
-            head.position = knee.position + SphericalCoordinates(h * angularSpeed * Time.deltaTime, false);
-            //head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
-            //head.AddForce(-Physics.gravity, ForceMode.Acceleration);
+            mover.useGravity = false;
+
+            float vDelta = v * angularSpeed * Time.deltaTime;
+            float hDelta = h * angularSpeed * Time.deltaTime;
+
+            mover.position = root.position + SphericalCoordinates(vDelta, hDelta, out theta, out phi);
         }
         else
         {
-            head.useGravity = true;
+            mover.useGravity = false;
+            SphericalCoordinates(0f, 0f, out theta, out phi);
         }
+
+        Debug.Log("Theta: " + theta * Mathf.Rad2Deg);
+        Debug.Log("Phi: " + phi * Mathf.Rad2Deg);
     }
 
-    void ClampPosition()
+    Vector3 SphericalCoordinates(float vDelta, float hDelta, out float theta, out float phi)
     {
-        /* Clamp Position */
-        Vector3 headVelocity = Vector3.Project(head.linearVelocity, direction);
-        Vector3 kneeVelocity = Vector3.Project(knee.linearVelocity, -direction);
-        if (distance <= minDistance && headVelocity.magnitude != 0)
-        {
-            head.AddForce(-headVelocity, ForceMode.VelocityChange);
-        }
-        if (distance >= maxDistance && headVelocity.magnitude != 0)
-        {
-            head.AddForce(-headVelocity, ForceMode.VelocityChange);
-            if (kneeCd.isColliding && !isPressed)
-            {
-                knee.AddForce(direction * potentialEnergy, ForceMode.Impulse);
-                potentialEnergy = 0;
-            }
-        }
-    }
-
-    Vector3 SphericalCoordinates(float deltaDeg, bool isVertical)
-    {
-        float phiDeg = Vector3.Angle(Vector3.up, direction);
+        float phiDeg = Mathf.Abs(Vector3.SignedAngle(Vector3.up, direction, Vector3.right));
         float thetaDeg = Vector3.SignedAngle(Vector3.forward, direction, Vector3.up) + 180;
-        float phi = phiDeg * Mathf.Deg2Rad;
-        float theta = thetaDeg * Mathf.Deg2Rad;
-
-        if (isVertical)
-        {
-            phi -= deltaDeg * Mathf.Deg2Rad;
-        }
-        else
-        {
-            theta += deltaDeg * Mathf.Deg2Rad;
-        }
+        phi = (phiDeg - vDelta) * Mathf.Deg2Rad;
+        theta = (thetaDeg + hDelta) * Mathf.Deg2Rad;
 
         float x = -Mathf.Sin(theta) * Mathf.Sin(phi);
         float y = Mathf.Cos(phi);
@@ -151,6 +153,26 @@ public class WormBehavior : MonoBehaviour
         Vector3 newCoord = distance * new Vector3(x, y, z);
 
         return newCoord;
+    }
+
+    void ClampPosition()
+    {
+        /* Clamp Position */
+        Vector3 headVelocity = Vector3.Project(mover.linearVelocity, direction);
+        Vector3 kneeVelocity = Vector3.Project(root.linearVelocity, -direction);
+        if (distance <= minDistance && headVelocity.magnitude != 0)
+        {
+            mover.AddForce(-headVelocity, ForceMode.VelocityChange);
+        }
+        if (distance >= maxDistance && headVelocity.magnitude != 0)
+        {
+            mover.AddForce(-headVelocity, ForceMode.VelocityChange);
+            if (rootCd.isColliding && !isPressed)
+            {
+                root.AddForce(direction * potentialEnergy, ForceMode.Impulse);
+                potentialEnergy = 0;
+            }
+        }
     }
 
     Vector3 XZ(Vector3 vector)

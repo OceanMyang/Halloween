@@ -539,6 +539,8 @@ MonoBehaviour:
   shakeSpeed: 10
   maxDistance: 8
   minDistance: 4
+  mover: {fileID: 0}
+  root: {fileID: 0}
 --- !u!1 &759244966
 GameObject:
   m_ObjectHideFlags: 0
@@ -1329,14 +1331,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9aa1ef11efab6064dae535af81a85570, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  head: {fileID: 0}
-  knee: {fileID: 0}
+  head: {fileID: 1009028667}
+  knee: {fileID: 888434917}
   slideSpeed: 10
   springConstant: 2
   liftSpeed: 20
   shakeSpeed: 10
   maxDistance: 8
   minDistance: 4
+  mover: {fileID: 0}
+  root: {fileID: 0}
 --- !u!4 &1900437560
 Transform:
   m_ObjectHideFlags: 0
