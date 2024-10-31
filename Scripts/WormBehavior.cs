@@ -100,48 +100,46 @@ public class WormBehavior : MonoBehaviour
         float h = Input.GetAxis("Horizontal");
 
         mover.rotation = Quaternion.LookRotation(direction);
-        //if (v != 0)
-        //{
-        //    mover.useGravity = false;
-        //    if (!(v > 0 && XZ(offset).magnitude <= 1))
-        //    {
-        //        head.position += v * liftSpeed * Time.deltaTime * head.transform.up;
-        //    }
-        //    head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
-        //    head.AddForce(-Physics.gravity, ForceMode.Acceleration);
-        //}
-        //else if (h != 0)
-        //{
-        //    mover.useGravity = false;
-        //    head.position += h * liftSpeed * Time.deltaTime * head.transform.right;
-        //    head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
-        //    head.AddForce(-Physics.gravity, ForceMode.Acceleration);
-        //}
-
-        float theta = 0f;
-        float phi = 0f;
-        if (v != 0 || h != 0)
+        root.rotation = Quaternion.LookRotation(-direction);
+        if (v != 0)
         {
             mover.useGravity = false;
-
-            float vDelta = v * angularSpeed * Time.deltaTime;
-            float hDelta = h * angularSpeed * Time.deltaTime;
-
-            mover.position = root.position + SphericalCoordinates(vDelta, hDelta, out theta, out phi);
+            if (!(v > 0 && XZ(offset).magnitude <= 1))
+            {
+                head.position += v * liftSpeed * Time.deltaTime * root.transform.up;
+            }
+            //head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
+            //head.AddForce(-Physics.gravity, ForceMode.Acceleration);
         }
+        else if (h != 0)
+        {
+            mover.useGravity = false;
+            head.position += h * liftSpeed * Time.deltaTime * head.transform.right;
+            //head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
+            //head.AddForce(-Physics.gravity, ForceMode.Acceleration);
+        }
+
+        //float theta = 0f;
+        //float phi = 0f;
+        //if (v != 0 || h != 0)
+        //{
+        //    mover.useGravity = false;
+
+        //    float vDelta = v * angularSpeed * Time.deltaTime;
+        //    float hDelta = h * angularSpeed * Time.deltaTime;
+
+        //    mover.position = root.position + SphericalCoordinates(vDelta, hDelta, out theta, out phi);
+        //}
         else
         {
-            mover.useGravity = false;
-            SphericalCoordinates(0f, 0f, out theta, out phi);
+            mover.useGravity = true;
         }
-
-        Debug.Log("Theta: " + theta * Mathf.Rad2Deg);
-        Debug.Log("Phi: " + phi * Mathf.Rad2Deg);
     }
 
     Vector3 SphericalCoordinates(float vDelta, float hDelta, out float theta, out float phi)
     {
-        float phiDeg = Mathf.Abs(Vector3.SignedAngle(Vector3.up, direction, Vector3.right));
+        Vector3 cross = Vector3.Cross(direction, Vector3.up);
+        float phiDeg = Mathf.Abs(Vector3.SignedAngle(Vector3.up, direction,cross));
         float thetaDeg = Vector3.SignedAngle(Vector3.forward, direction, Vector3.up) + 180;
         phi = (phiDeg - vDelta) * Mathf.Deg2Rad;
         theta = (thetaDeg + hDelta) * Mathf.Deg2Rad;
@@ -149,6 +147,16 @@ public class WormBehavior : MonoBehaviour
         float x = -Mathf.Sin(theta) * Mathf.Sin(phi);
         float y = Mathf.Cos(phi);
         float z = -Mathf.Cos(theta) * Mathf.Sin(phi);
+
+        //if (phi < Mathf.PI / 2)
+        //{
+        //    float sinPhi = Mathf.Sin(phi);
+        //    if (sinPhi > 0.01f) // Avoid division by very small values
+        //    {
+        //        x /= sinPhi;
+        //        z /= sinPhi;
+        //    }
+        //}
 
         Vector3 newCoord = distance * new Vector3(x, y, z);
 

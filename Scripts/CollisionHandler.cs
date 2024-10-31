@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class CollisionHandler : MonoBehaviour
 {
+    public float minDamping = 1f;
+    public float maxDamping = 10f;
     public bool isColliding = false;
     public Vector3 normalVector = Vector3.zero;
 
@@ -13,7 +15,7 @@ public class CollisionHandler : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         isColliding = true;
-        rb.freezeRotation = true;
+        rb.angularDamping = maxDamping;
     }
 
     private void OnCollisionStay(Collision collision)
@@ -34,6 +36,6 @@ public class CollisionHandler : MonoBehaviour
     {
         isColliding = false;
         normalVector = Vector3.zero;
-        rb.freezeRotation = false;
+        rb.angularDamping = minDamping;
     }
 }
