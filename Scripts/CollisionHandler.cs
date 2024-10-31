@@ -15,7 +15,7 @@ public class CollisionHandler : MonoBehaviour
     private void OnCollisionEnter(Collision collision)
     {
         isColliding = true;
-        rb.angularDamping = maxDamping;
+        rb.freezeRotation = true;
     }
 
     private void OnCollisionStay(Collision collision)
@@ -36,6 +36,6 @@ public class CollisionHandler : MonoBehaviour
     {
         isColliding = false;
         normalVector = Vector3.zero;
-        rb.angularDamping = minDamping;
+        rb.freezeRotation = false;
     }
 }

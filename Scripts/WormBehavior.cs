@@ -12,6 +12,7 @@ public class WormBehavior : MonoBehaviour
     public float shakeSpeed = 10f;
     public float maxDistance = 4f;
     public float minDistance = 2f;
+    public float energyMultiplier = 2f;
 
     public Rigidbody mover;
     public Rigidbody root;
@@ -101,22 +102,29 @@ public class WormBehavior : MonoBehaviour
 
         mover.rotation = Quaternion.LookRotation(direction);
         root.rotation = Quaternion.LookRotation(-direction);
+
+        Vector3 normal = Vector3.up;
+
+        if (rootCd.normalVector != null)
+        {
+            normal = rootCd.normalVector;
+        }
+
+        Vector3 cross = Vector3.Cross(direction, normal).normalized;
+
         if (v != 0)
         {
-            mover.useGravity = false;
-            if (!(v > 0 && XZ(offset).magnitude <= 1))
-            {
-                head.position += v * liftSpeed * Time.deltaTime * root.transform.up;
-            }
-            //head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
-            //head.AddForce(-Physics.gravity, ForceMode.Acceleration);
+            //mover.useGravity = false;
+            mover.position += v * liftSpeed * Time.deltaTime * normal;
+            mover.AddForce(-Physics.gravity, ForceMode.Acceleration);
+            //mover.linearVelocity -= Vector3.Project(mover.linearVelocity, Physics.gravity);
         }
         else if (h != 0)
         {
-            mover.useGravity = false;
-            head.position += h * liftSpeed * Time.deltaTime * head.transform.right;
-            //head.linearVelocity -= Vector3.Project(head.linearVelocity, Physics.gravity);
-            //head.AddForce(-Physics.gravity, ForceMode.Acceleration);
+            //mover.useGravity = false;
+            mover.position -= h * liftSpeed * Time.deltaTime * cross;
+            mover.AddForce(-Physics.gravity, ForceMode.Acceleration);
+            //mover.linearVelocity -= Vector3.Project(mover.linearVelocity, Physics.gravity);
         }
 
         //float theta = 0f;
@@ -130,10 +138,10 @@ public class WormBehavior : MonoBehaviour
 
         //    mover.position = root.position + SphericalCoordinates(vDelta, hDelta, out theta, out phi);
         //}
-        else
-        {
-            mover.useGravity = true;
-        }
+        //else
+        //{
+        //    mover.useGravity = true;
+        //}
     }
 
     Vector3 SphericalCoordinates(float vDelta, float hDelta, out float theta, out float phi)
@@ -148,16 +156,6 @@ public class WormBehavior : MonoBehaviour
         float y = Mathf.Cos(phi);
         float z = -Mathf.Cos(theta) * Mathf.Sin(phi);
 
-        //if (phi < Mathf.PI / 2)
-        //{
-        //    float sinPhi = Mathf.Sin(phi);
-        //    if (sinPhi > 0.01f) // Avoid division by very small values
-        //    {
-        //        x /= sinPhi;
-        //        z /= sinPhi;
-        //    }
-        //}
-
         Vector3 newCoord = distance * new Vector3(x, y, z);
 
         return newCoord;
@@ -166,29 +164,29 @@ public class WormBehavior : MonoBehaviour
     void ClampPosition()
     {
         /* Clamp Position */
-        Vector3 headVelocity = Vector3.Project(mover.linearVelocity, direction);
-        Vector3 kneeVelocity = Vector3.Project(root.linearVelocity, -direction);
-        if (distance <= minDistance && headVelocity.magnitude != 0)
+        Vector3 moverVelocity = Vector3.Project(mover.linearVelocity, direction);
+        Vector3 rootVelocity = Vector3.Project(root.linearVelocity, -direction);
+        if (distance <= minDistance && moverVelocity.magnitude != 0)
         {
-            mover.AddForce(-headVelocity, ForceMode.VelocityChange);
+            mover.AddForce(-moverVelocity, ForceMode.VelocityChange);
         }
-        if (distance >= maxDistance && headVelocity.magnitude != 0)
+        if (distance >= maxDistance && moverVelocity.magnitude != 0)
         {
-            mover.AddForce(-headVelocity, ForceMode.VelocityChange);
+            mover.AddForce(-moverVelocity, ForceMode.VelocityChange);
             if (rootCd.isColliding && !isPressed)
             {
-                root.AddForce(direction * potentialEnergy, ForceMode.Impulse);
+                root.AddForce(energyMultiplier * direction * potentialEnergy, ForceMode.Impulse);
                 potentialEnergy = 0;
             }
         }
     }
 
-    Vector3 XZ(Vector3 vector)
+    public static Vector3 XZ(Vector3 vector)
     {
         return new Vector3(vector.x, 0, vector.z);
     }
 
-    Vector3 Y(Vector3 vector)
+    public static Vector3 Y(Vector3 vector)
     {
         return new Vector3(0, vector.y, 0);
     }
