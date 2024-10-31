@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BaseBehavior : MonoBehaviour
+public class WormBehavior : MonoBehaviour
 {
     public Rigidbody head;
     public Rigidbody knee;
@@ -16,7 +16,10 @@ public class BaseBehavior : MonoBehaviour
     private Vector3 offset;
     private Vector3 direction;
     private float distance;
-    private Vector3 hookeForce;
+    private float hookeForce;
+
+    private bool isPressed;
+    private float potentialEnergy;
 
     void Start()
     {
@@ -41,25 +44,34 @@ public class BaseBehavior : MonoBehaviour
         offset = head.position - knee.position;
         direction = offset.normalized;
         distance = offset.magnitude;
-        hookeForce = springConstant * direction * (distance - maxDistance);
+        hookeForce = springConstant * (distance - maxDistance);
 
-        SlideKnee();
+        Debug.Log(potentialEnergy);
+
+        SlideHead();
         ClampPosition();
-        LiftHead(); 
+        LiftHead();
     }
 
-    void SlideKnee()
+    void SlideHead()
     {
         if (Input.GetKey(KeyCode.Space))
         {
+            isPressed = true;
+            potentialEnergy = 0.5f * springConstant * (distance - maxDistance) * (distance - maxDistance);
             if (distance > minDistance)
             {
                 head.AddForce(-direction * slideSpeed, ForceMode.Impulse);
             }
         }
+        else
+        {
+             isPressed = false;
+        }
+
         if (distance != maxDistance)
         {
-            head.AddForce(-hookeForce, ForceMode.Impulse);
+            head.AddForce(-direction * hookeForce, ForceMode.Impulse);
         }
     }
 
@@ -93,11 +105,12 @@ public class BaseBehavior : MonoBehaviour
         if (distance >= maxDistance && headVelocity.magnitude != 0)
         {
             head.AddForce(-headVelocity, ForceMode.VelocityChange);
-            if (kneeCd.isColliding)
+            if (kneeCd.isColliding && !isPressed)
             {
-                knee.AddForce(hookeForce, ForceMode.Impulse);
+                knee.AddForce(direction * potentialEnergy, ForceMode.Impulse);
+                potentialEnergy = 0;
             }
-        }
+        } 
     }
 
     Vector3 XZ(Vector3 vector)

@@ -734,7 +734,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 903409193}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5470a50c479af414ba779115f057c137, type: 3}
+  m_Script: {fileID: 11500000, guid: 1f11c61bca575344585d25ddf13c6712, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   isColliding: 0
@@ -786,7 +786,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!65 &1561958491
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -885,7 +885,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1561958488}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5470a50c479af414ba779115f057c137, type: 3}
+  m_Script: {fileID: 11500000, guid: 1f11c61bca575344585d25ddf13c6712, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   isColliding: 0
